@@ -1,5 +1,7 @@
 <?php namespace SiegerHansma\MailhogTestcase;
 
+use GuzzleHttp\Client;
+
 class MailhogTestCase extends \TestCase
 {
     protected $mailhog;
@@ -11,24 +13,40 @@ class MailhogTestCase extends \TestCase
      */
     public function __construct()
     {
-        $this->mailhog = new \GuzzleHttp\Client(['base_url' => $this->mailhogBasepath . '/api/']);
+        $this->mailhog = new Client(['base_uri' => $this->mailhogBasepath . '/api/']);
     }
 
+    /**
+     * Gets a list of all emails.
+     * @return mixed
+     */
     public function getAllEmails()
     {
-        $emails = $this->mailhog->get('v1/messages')->json();
+        $emails = $this->mailhog->get('v1/messages')->getBody()->getContents();
 
-        return $emails;
+        return json_decode($emails);
     }
 
-    public function assertNumberOfEmails($count)
+    /**
+     * Checks if the number of emails expected is equal to the number of emails in the mailbox.
+     *
+     * @param $expected
+     *
+     * @return $this
+     *
+     */
+    public function assertNumberOfEmails($expected)
     {
         $emails = $this->getAllEmails();
-        $this->assertCount($count, $emails);
+        $this->assertCount($expected, $emails);
 
         return $this;
     }
 
+    /**
+     * Provides a var_dump of the contents of the mailbox.
+     * @return $this
+     */
     public function dumpEmails()
     {
         var_dump($this->getAllEmails()['items']);
@@ -36,6 +54,14 @@ class MailhogTestCase extends \TestCase
         return $this;
     }
 
+    /**
+     * Compares number of expected mails to the number of actual mails send to an emailaddress.
+     * @param $email
+     * @param $expected
+     *
+     * @return $this
+     * @throws Exception
+     */
     public function seeNumberOfEmailsTo($email, $expected)
     {
         $emails = $this->search('to', $email);
@@ -46,6 +72,10 @@ class MailhogTestCase extends \TestCase
 
     }
 
+    /**
+     * Clears out the mailbox.
+     * @return $this
+     */
     public function resetEmails()
     {
         $this->mailhog->delete('v1/messages');
@@ -53,6 +83,14 @@ class MailhogTestCase extends \TestCase
         return $this;
     }
 
+    /**
+     * Searches inside of the mailbox. 
+     * @param $kind
+     * @param $query
+     *
+     * @return mixed
+     * @throws Exception
+     */
     private function search($kind, $query)
     {
         if (! in_array($kind, ['from', 'to', 'containing'])) {
@@ -63,9 +101,9 @@ class MailhogTestCase extends \TestCase
             throw new Exception('We need a query to do a search.');
         }
 
-        $emails = $this->mailhog->get('v2/search', ['kind' => $kind, 'query' => $query])->json();
+        $emails = $this->mailhog->get('v2/search', ['kind' => $kind, 'query' => $query])->getBody()->getContents();
 
-        return $emails;
+        return json_decode($emails);
     }
 
 }
