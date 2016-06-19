@@ -25,6 +25,8 @@ Mailhog running on another port? We've got you covered. Simply add a mailhogBase
 
 ### API overview
 
+Still todo. The main Testcase is already documented. 
+
 
 
 
