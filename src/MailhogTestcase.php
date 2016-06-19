@@ -1,6 +1,6 @@
 <?php namespace SiegerHansma\MailhogTestcase;
 
-class MailhogTestCase extends TestCase
+class MailhogTestCase extends \TestCase
 {
     protected $mailhog;
 
